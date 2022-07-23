@@ -2,17 +2,20 @@
 
 #include <memory>
 
-namespace lcrt {
+namespace lcrx {
 
+// empty namespace to hide from other files
+namespace {
 enum operation { COMMIT, REVERT, UNFILLED };
+}
 
-class operation_handler {
+class lcr_handler {
 	// could be replaced with local vector allocation
 	std::shared_ptr<operation> next_operation;
 	void renew_next() { next_operation = std::make_shared<operation>(UNFILLED); }
 
 public:
-	operation_handler() : next_operation(std::make_shared<operation>(UNFILLED)) {}
+	lcr_handler() : next_operation(std::make_shared<operation>(UNFILLED)) {}
 	std::shared_ptr<operation> next() { return next_operation; }
 	void commit() {
 		*next_operation = COMMIT;
@@ -24,11 +27,11 @@ public:
 	}
 };
 
-operation_handler global_handler;
+lcr_handler lcr_global_handler;
 
 template <typename T> class lcr {
 	// assumes primitive copyable
-	operation_handler* handler;
+	lcr_handler* handler;
 	std::shared_ptr<operation> scheduled_operation;
 	T primary;
 	T secondary;
@@ -48,15 +51,15 @@ template <typename T> class lcr {
 public:
 	template <typename... Args>
 	lcr(Args&&... args)
-			: handler(&global_handler), scheduled_operation(handler->next()),
+			: handler(&lcr_global_handler), scheduled_operation(handler->next()),
 				primary(args...), secondary(args...) {}
 
 	template <typename... Args>
-	lcr(operation_handler& _handler, Args&&... args)
+	lcr(lcr_handler& _handler, Args&&... args)
 			: handler(&_handler), scheduled_operation(handler->next()),
 				primary(args...), secondary(args...) {}
 
-	void assign(operation_handler& _handler) {
+	void assign(lcr_handler& _handler) {
 		propogate();
 		handler = &_handler;
 		scheduled_operation = handler->next();
@@ -70,4 +73,4 @@ public:
 	}
 };
 
-}; // namespace lcrt
+}; // namespace lcrx
