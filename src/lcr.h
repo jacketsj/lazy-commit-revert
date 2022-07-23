@@ -24,9 +24,11 @@ public:
 	}
 };
 
+operation_handler global_handler;
+
 template <typename T> class lcr {
 	// assumes primitive copyable
-	operation_handler& handler;
+	operation_handler* handler;
 	std::shared_ptr<operation> scheduled_operation;
 	T primary;
 	T secondary;
@@ -40,14 +42,25 @@ template <typename T> class lcr {
 			secondary = primary;
 		else if (op == REVERT)
 			primary = secondary;
-		scheduled_operation = handler.next();
+		scheduled_operation = handler->next();
 	}
 
 public:
 	template <typename... Args>
-	lcr(operation_handler& _handler, Args&&... args)
-			: handler(_handler), scheduled_operation(handler.next()),
+	lcr(Args&&... args)
+			: handler(&global_handler), scheduled_operation(handler->next()),
 				primary(args...), secondary(args...) {}
+
+	template <typename... Args>
+	lcr(operation_handler& _handler, Args&&... args)
+			: handler(&_handler), scheduled_operation(handler->next()),
+				primary(args...), secondary(args...) {}
+
+	void assign(operation_handler& _handler) {
+		propogate();
+		handler = &_handler;
+		scheduled_operation = handler->next();
+	}
 
 	T& operator()() { return get(); }
 
@@ -55,15 +68,6 @@ public:
 		propogate();
 		return primary;
 	}
-};
-
-operation_handler global_handler;
-
-template <typename T> class global_lcr : public lcr<T> {
-
-public:
-	template <typename... Args>
-	global_lcr(Args&&... args) : lcr<T>(global_handler, args...) {}
 };
 
 }; // namespace lcrt
