@@ -15,39 +15,39 @@ public:
 	operation_handler() : next_operation(std::make_shared<operation>(UNFILLED)) {}
 	std::shared_ptr<operation> next() { return next_operation; }
 	void commit() {
-		*next_operation = operation.COMMIT;
+		*next_operation = COMMIT;
 		renew_next();
 	}
 	void revert() {
-		*next_operation = operation.REVERT;
+		*next_operation = REVERT;
 		renew_next();
 	}
 };
 
 template <typename T> class lcr {
 	// assumes primitive copyable
-	operation_handler& ops;
+	operation_handler& handler;
 	std::shared_ptr<operation> scheduled_operation;
 	T primary;
 	T secondary;
 
 	void propogate() {
 		operation op = *scheduled_operation;
-		if (op == operation.UNFILLED)
+		if (op == UNFILLED)
 			return;
 
-		if (op == operation.COMMIT)
+		if (op == COMMIT)
 			secondary = primary;
-		else if (op == operation.REVERT)
+		else if (op == REVERT)
 			primary = secondary;
-		scheduled_operation = ops.next();
+		scheduled_operation = handler.next();
 	}
 
 public:
 	template <typename... Args>
-	lcr(operation_handler& ops, Args&&..args)
-			: ops(_ops), scheduled_operation(ops.next()), primary(args),
-				secondary(args) {}
+	lcr(operation_handler& _handler, Args&&... args)
+			: handler(_handler), scheduled_operation(handler.next()),
+				primary(args...), secondary(args...) {}
 
 	T& operator()() { return get(); }
 
@@ -55,15 +55,15 @@ public:
 		propogate();
 		return primary;
 	}
-}
+};
 
-template <typename T>
-class global_lcr : public lcr<T> {
-	static operation_handler ops;
+operation_handler global_handler;
+
+template <typename T> class global_lcr : public lcr<T> {
 
 public:
 	template <typename... Args>
-	lcr(operation_handler& ops, Args&&..args) : lcr<T>(ops, args) {}
-}
+	global_lcr(Args&&... args) : lcr<T>(global_handler, args...) {}
+};
 
 }; // namespace lcrt
