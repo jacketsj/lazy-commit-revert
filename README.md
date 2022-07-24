@@ -32,7 +32,7 @@ There is also `lcr_global_handler`,
 a static handler which serves as a default handler
 for all `lcr<T>` wrappers.
 
-# Example/Usage
+# Example
 
 ```cpp
 #include <iostream>
@@ -93,3 +93,8 @@ int main() {
 # Complexity
 
 Everything is `O(1)`!
+
+# Usage
+
+To use in your own project, simply include `lcr.h`.
+To run the tests, build with `./build.sh` and execute with `build/lcr_test`.
