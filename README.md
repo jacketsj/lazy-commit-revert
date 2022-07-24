@@ -3,7 +3,36 @@ Build a data structure, modify it, commit changes, modify it more, revert uncomm
 This is a design idea useful for some kinds of local search, among other things.
 Here a well-optimized templated header-only implementation is given, with some usage examples.
 
-# Example
+# Explanation
+
+Everything is inside a single header `lcr.h`,
+under the namespace `lcrx`.  
+There are two primary classes: `lcr_handler`, and `lcr<T>`.
+
+### `lcr<T>`
+
+A wrapper for a `T`,
+along with an associated `lcr_handler`.
+To access the internal data,
+the `operator()` function (or `get()`) should be used every time
+to obtain a `T&`.
+This will propogate any changes made by the handler.
+The initialization can either take a handler,
+or by default use the global handler.
+If the handler needs to be changed later,
+`assign(lcr_handler&)` can be used.
+
+### `lcr_handler`
+
+The handler has two primary operations:
+- `commit()`. All `lcr<T>` associated with the handler will be copied into a backup (lazily).
+- `revert()`. All `lcr<T>` associated with the handler will be restored from backup (lazily).
+
+There is also `lcr_global_handler`,
+a static handler which serves as a default handler
+for all `lcr<T>` wrappers.
+
+# Example/Usage
 
 ```cpp
 #include <iostream>
