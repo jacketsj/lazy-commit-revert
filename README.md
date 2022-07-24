@@ -71,6 +71,22 @@ int main() {
   // vec = {1,2,6,2}
   // it's important to access through the accessors () every time, since it propogates the lazy evaluation:
   std::cout << "i=" << i() << std::endl;
+
+
+  // create a custom handler
+  lcr_handler local_handler;
+  // assign the handler to i
+  i.assign(local_handler);
+
+  // i is now handled by the local handler, while each of the items in vec are handled by the global handler
+  // so the global handler has no effect on i
+  i() = 4;
+  global_handler.revert();
+  // i = 4 still
+  std::cout << "i=" << i() << std::endl;
+  local_handler.revert();
+  // now i = 2 again
+  std::cout << "i=" << i() << std::endl;
 }
 ```
 
