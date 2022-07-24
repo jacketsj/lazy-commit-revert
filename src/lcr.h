@@ -61,6 +61,8 @@ public:
 
 	void assign(lcr_handler& _handler) {
 		propogate();
+		// a re-assignment also commits the value
+		secondary = primary;
 		handler = &_handler;
 		scheduled_operation = handler->next();
 	}
